@@ -24,7 +24,7 @@ This is a rough outline of what a contributor's workflow looks like:
 
 We follow a rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
-the body of the commit should describe the why.
+the body of the commit should describe the why
 
 ```
 Add the test-cluster command
