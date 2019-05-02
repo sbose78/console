@@ -5,7 +5,7 @@ This document outlines some of the conventions on development workflow.
 ## Getting Started
 
 - Fork the repository on GitHub
-- Read the [README](README.md) for build and test instructions
+- Read the [README](README.md) for build and test instruction
 - Play with the project, submit bugs, submit patches!
 
 ## Contribution Flow
