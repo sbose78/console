@@ -40,7 +40,6 @@ message. This allows automated tooling to generate links to bugs in release
 notes and will eventually allow us to automatically transition bugs to `ON_QA`
 when the fix is available in a nightly build. Here's an example commit message
 for a change that fixes a Bugzilla bug:
-
 ```
 Bug 1679272: Validate console can talk to OAuth token URL
 
