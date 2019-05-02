@@ -4,6 +4,7 @@
 .protractor-fail-fast
 /bin
 /gopath
+/goroot
 /Godeps/_workspace/src/github.com/openshift/console
 /frontend/.cache-loader
 /frontend/__coverage__
