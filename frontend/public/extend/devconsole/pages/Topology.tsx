@@ -1,7 +1,61 @@
+/* eslint-disable no-unused-vars, no-undef */
 import * as React from 'react';
+import { Helmet } from 'react-helmet';
+import { match as RMatch } from 'react-router';
+import ODCEmptyState from '../shared/components/EmptyState/EmptyState';
+import { StatusBox } from '../../../components/utils';
+import TopologyDataController, { RenderProps } from '../components/topology/TopologyDataController';
+import Topology from '../components/topology/Topology';
 
-const TopologyPage: React.SFC = () => (
-  <h1>This is App Topology View.</h1>
-);
+export interface TopologyPageProps {
+  match: RMatch<{
+    ns?: string;
+  }>;
+}
+
+const EmptyMsg = () => <ODCEmptyState title="Topology" />;
+
+export function renderTopology({ loaded, loadError, data }: RenderProps) {
+  return (
+    <StatusBox
+      data={data ? data.graph.nodes : null}
+      label="Topology"
+      loaded={loaded}
+      loadError={loadError}
+      EmptyMsg={EmptyMsg}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
+        <Topology data={data} />
+      </div>
+    </StatusBox>
+  );
+}
+
+const TopologyPage: React.FC<TopologyPageProps> = ({ match }) => {
+  const namespace = match.params.ns;
+
+  return (
+    <React.Fragment>
+      <Helmet>
+        <title>Topology</title>
+      </Helmet>
+      {namespace ? (
+        <TopologyDataController namespace={namespace} render={renderTopology} />
+      ) : (
+        <EmptyMsg />
+      )}
+    </React.Fragment>
+  );
+};
 
 export default TopologyPage;

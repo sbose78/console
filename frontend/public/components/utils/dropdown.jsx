@@ -62,6 +62,11 @@ export class DropdownMixin extends React.PureComponent {
 
   toggle(e) {
     e.preventDefault();
+
+    if (this.props.disabled) {
+      return;
+    }
+
     if (this.state.active) {
       this.hide(e);
     } else {
@@ -144,10 +149,10 @@ export class Dropdown extends DropdownMixin {
 
     this.state.items = Object.assign({}, bookmarks, props.items);
 
+    const defaultTitle = React.isValidElement(props.title) ? props.title : <span className="btn-dropdown__item--placeholder">{props.title}</span>;
     this.state.title = props.noSelection
       ? props.title
-      : _.get(props.items, props.selectedKey, <span className="btn-dropdown__item--placeholder">{props.title}</span>);
-
+      : _.get(props.items, props.selectedKey, defaultTitle);
     this.onKeyDown = e => this.onKeyDown_(e);
     this.changeTextFilter = e => this.applyTextFilter_(e.target.value, this.props.items);
     const { shortCut } = this.props;
@@ -293,14 +298,15 @@ export class Dropdown extends DropdownMixin {
 
   render() {
     const {active, autocompleteText, selectedKey, items, title, bookmarks, keyboardHoverKey, favoriteKey} = this.state;
-    const {autocompleteFilter, autocompletePlaceholder, className, buttonClassName, menuClassName, storageKey, canFavorite, dropDownClassName, titlePrefix, describedBy} = this.props;
-
+    const {autocompleteFilter, autocompletePlaceholder, actionItem, className, buttonClassName, menuClassName, storageKey, canFavorite, dropDownClassName, titlePrefix, describedBy, disabled} = this.props;
     const spacerBefore = this.props.spacerBefore || new Set();
     const headerBefore = this.props.headerBefore || {};
     const rows = [];
     const bookMarkRows = [];
-
     const addItem = (key, content) => {
+      if (!this.props.items[key]) {
+        return;
+      }
       const selected = (key === selectedKey) && !this.props.noSelection;
       const hover = key === keyboardHoverKey;
       const klass = classNames({'active': selected});
@@ -318,11 +324,32 @@ export class Dropdown extends DropdownMixin {
       rows.push(<DropDownRow className={klass} key={key} itemKey={key} content={content} onBookmark={storageKey && this.onBookmark} onclick={this.onClick} selected={selected} hover={hover} />);
     };
 
+    const ActionRow = () => {
+      const { actionTitle, actionKey } = actionItem;
+      const selected = (actionKey === selectedKey) && !this.props.noSelection;
+      const hover = actionKey === keyboardHoverKey;
+      return (
+        <React.Fragment>
+          <DropDownRow
+            className={classNames({'active': selected})}
+            key={`${actionKey}-${actionTitle}`}
+            itemKey={actionKey}
+            content={actionTitle}
+            onclick={this.onClick}
+            selected={selected}
+            hover={hover} />
+          <li className="co-namespace-selector__divider">
+            <div className="dropdown-menu__divider" />
+          </li>
+        </React.Fragment>
+      );
+    };
+
     _.each(items, (v, k) => addItem(k, v));
 
     return <div className={classNames(className)} ref={this.dropdownElement} style={this.props.style}>
       <div className={classNames('dropdown', dropDownClassName)}>
-        <button aria-haspopup="true" onClick={this.toggle} onKeyDown={this.onKeyDown} type="button" className={classNames('btn', 'btn-dropdown', 'dropdown-toggle', buttonClassName ? buttonClassName : 'btn-default')} id={this.props.id} aria-describedby={describedBy} >
+        <button aria-haspopup="true" onClick={this.toggle} onKeyDown={this.onKeyDown} type="button" className={classNames('btn', 'btn-dropdown', 'dropdown-toggle', buttonClassName ? buttonClassName : 'btn-default')} id={this.props.id} aria-describedby={describedBy} disabled={disabled} >
           <div className="btn-dropdown__content-wrap">
             <span className="btn-dropdown__item">
               {titlePrefix && <span className="btn-link__titlePrefix">{titlePrefix}: </span>}
@@ -348,6 +375,7 @@ export class Dropdown extends DropdownMixin {
                   onClick={e => e.stopPropagation()} />
               </div>
             }
+            { actionItem ? <ActionRow /> : null}
             { bookMarkRows }
             {_.size(bookMarkRows) ? <li className="co-namespace-selector__divider"><div className="dropdown-menu__divider" /></li> : null}
             {rows}
@@ -362,6 +390,10 @@ Dropdown.propTypes = {
   autocompleteFilter: PropTypes.func,
   autocompletePlaceholder: PropTypes.string,
   canFavorite: PropTypes.bool,
+  actionItem: PropTypes.objectOf(
+    PropTypes.string,
+    PropTypes.string
+  ),
   className: PropTypes.string,
   defaultBookmarks: PropTypes.objectOf(PropTypes.string),
   dropDownClassName: PropTypes.string,
@@ -375,6 +407,7 @@ Dropdown.propTypes = {
   spacerBefore: PropTypes.instanceOf(Set),
   textFilter: PropTypes.string,
   title: PropTypes.node,
+  disabled: PropTypes.bool,
 };
 
 export const ActionsMenu = (props) => {

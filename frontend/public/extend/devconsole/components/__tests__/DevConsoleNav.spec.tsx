@@ -7,7 +7,9 @@ import { DevConsoleNavigation, PageNav } from '../DevConsoleNav';
 function shallowSetup() {
   const props = {
     location: '/devops',
+    activeNamespace: '',
     isNavOpen: true,
+    flags: null,
     onNavSelect: () => {},
     onToggle: () => {},
   };

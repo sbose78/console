@@ -3,7 +3,7 @@
 import * as React from 'react';
 import * as _ from 'lodash-es';
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 import { FieldLevelHelp } from 'patternfly-react';
 import { getPorts } from './source-to-image';
@@ -25,6 +25,8 @@ import {
   ImageStreamImportsModel,
   ServiceModel,
 } from '../models';
+import PerspectiveLink from '../extend/devconsole/shared/components/PerspectiveLink';
+import { getActivePerspective } from '../ui/ui-selectors';
 
 const getSuggestedName = name => {
   if (!name) {
@@ -49,7 +51,7 @@ const ImagePorts = ({ports, name}) => <React.Fragment>
   <div>Other containers can access this service through the hostname <strong>{name || '<name>'}</strong>.</div>
 </React.Fragment>;
 
-export class DeployImage extends React.Component<DeployImageProps, DeployImageState> {
+export class DeployImage_ extends React.Component<DeployImageProps & DeployImageStateProps, DeployImageState> {
   constructor(props) {
     super(props);
 
@@ -159,6 +161,7 @@ export class DeployImage extends React.Component<DeployImageProps, DeployImageSt
     });
 
     const { name, namespace, isi } = this.state;
+    const { activePerspective } = this.props;
 
     const annotations = {
       'openshift.io/generated-by': 'OpenShiftWebConsole',
@@ -299,7 +302,13 @@ export class DeployImage extends React.Component<DeployImageProps, DeployImageSt
       .then(() => {
         this.setState({inProgress: false});
         if (!this.state.error) {
-          history.push(`/overview/ns/${this.state.namespace}`);
+          switch (activePerspective) {
+            case 'dev':
+              history.push(`/dev/topology/ns/${this.state.namespace}`);
+              break;
+            default:
+              history.push(`/overview/ns/${this.state.namespace}`);
+          }
         }
       });
   };
@@ -340,7 +349,7 @@ export class DeployImage extends React.Component<DeployImageProps, DeployImageSt
               </span>
             </div>
             <div className="help-block" id="image-name-help">
-              To deploy an image from a private repository, you must <Link to={`/k8s/ns/${this.state.namespace || 'default'}/secrets/new/image`}>create an image pull secret</Link> with your image registry credentials.
+              To deploy an image from a private repository, you must <PerspectiveLink to={`/k8s/ns/${this.state.namespace || 'default'}/secrets/new/image`}>create an image pull secret</PerspectiveLink> with your image registry credentials.
             </div>
           </div>
           <div className="co-image-name-results">
@@ -414,7 +423,7 @@ export class DeployImage extends React.Component<DeployImageProps, DeployImageSt
           </div>
           <ButtonBar errorMessage={this.state.error} inProgress={this.state.inProgress}>
             <button type="submit" className="btn btn-primary" disabled={!this.state.namespace || !this.state.imageName || !this.state.name}>Deploy</button>
-            <Link to={formatNamespacedRouteForResource('deploymentconfigs')} className="btn btn-default">Cancel</Link>
+            <PerspectiveLink to={formatNamespacedRouteForResource('deploymentconfigs')} className="btn btn-default">Cancel</PerspectiveLink>
           </ButtonBar>
         </form>
       </div>
@@ -422,8 +431,20 @@ export class DeployImage extends React.Component<DeployImageProps, DeployImageSt
   }
 }
 
+const mapDeployImageStateToProps = (state): DeployImageStateProps => {
+  return {
+    activePerspective: getActivePerspective(state),
+  };
+};
+
+export const DeployImage = connect(mapDeployImageStateToProps)(DeployImage_);
+
 export type DeployImageProps = {
   location: any,
+};
+
+export type DeployImageStateProps = {
+  activePerspective: string;
 };
 
 export type DeployImageState = {

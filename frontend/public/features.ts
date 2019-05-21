@@ -15,6 +15,7 @@ import {
   SelfSubjectAccessReviewModel,
   PackageManifestModel,
   OperatorGroupModel,
+  PipelineModel,
 } from './models';
 import { k8sBasePath, referenceForModel, ClusterVersionKind } from './module/k8s';
 import { k8sCreate } from './module/k8s/resource';
@@ -66,6 +67,7 @@ export enum FLAGS {
   CLUSTER_VERSION = 'CLUSTER_VERSION',
   MACHINE_CONFIG = 'MACHINE_CONFIG',
   SHOW_DEV_CONSOLE = 'SHOW_DEV_CONSOLE',
+  SHOW_PIPELINE = 'SHOW_PIPELINE',
 }
 
 export const DEFAULTS_ = _.mapValues(FLAGS, flag => flag === FLAGS.AUTH_ENABLED
@@ -82,6 +84,7 @@ export const CRDs = {
   'marketplace.redhat.com~v1alpha1~OperatorSource': FLAGS.OPERATOR_HUB,
   [referenceForModel(MachineModel)]: FLAGS.CLUSTER_API,
   [referenceForModel(MachineConfigModel)]: FLAGS.MACHINE_CONFIG,
+  [referenceForModel(PipelineModel)]: FLAGS.SHOW_PIPELINE,
 };
 
 const SET_FLAG = 'SET_FLAG';
@@ -193,17 +196,21 @@ const detectUser = dispatch => coFetchJSON('api/kubernetes/apis/user.openshift.i
       }
     },
   );
-
-const devopsConsolePath = `${k8sBasePath}/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/gitsources.devopsconsole.openshift.io`;
+  
+const consoleConfigPath = `${k8sBasePath}/api/v1/namespaces/openshift-config-managed/configmaps/console-public`;
 const detectDevConsole = dispatch => {
-  coFetchJSON(devopsConsolePath)
-    .then(
-      res => setFlag(dispatch, FLAGS.SHOW_DEV_CONSOLE, true),
-      err => _.get(err, 'response.status') === 404
-        ? setFlag(dispatch, FLAGS.SHOW_DEV_CONSOLE, false)
-        : handleError(err, FLAGS.SHOW_DEV_CONSOLE, dispatch, detectDevConsole)
+  coFetchJSON(consoleConfigPath)
+  .then(
+    res => {
+      if (res.data.showDevConsole === "true") {
+        dispatch(setFlag(dispatch, FLAGS.SHOW_DEV_CONSOLE, true));
+      }
+    },
+    err => _.get(err, 'response.status') === 404 
+      ? setFlag(dispatch, FLAGS.SHOW_DEV_CONSOLE, false)
+      : handleError(err, FLAGS.SHOW_DEV_CONSOLE, dispatch, detectDevConsole)
     );
-};
+  };
 
 export const featureActions = [
   detectOpenShift,

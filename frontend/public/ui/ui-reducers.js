@@ -2,13 +2,14 @@ import * as _ from 'lodash-es';
 import { Map as ImmutableMap } from 'immutable';
 
 import { types } from './ui-actions';
-import { ALL_NAMESPACES_KEY, LAST_NAMESPACE_NAME_LOCAL_STORAGE_KEY, NAMESPACE_LOCAL_STORAGE_KEY, LAST_PERSPECTIVE_LOCAL_STORAGE_KEY } from '../const';
+import { ALL_NAMESPACES_KEY, LAST_NAMESPACE_NAME_LOCAL_STORAGE_KEY, NAMESPACE_LOCAL_STORAGE_KEY, LAST_PERSPECTIVE_LOCAL_STORAGE_KEY, ALL_APPLICATIONS_KEY } from '../const';
 import { AlertStates, isSilenced, SilenceStates } from '../monitoring';
 import { legalNamePattern, getNamespace, getPerspective, defaultPerspective } from '../components/utils/link';
 
 export default (state, action) => {
   if (!state) {
     const { pathname } = window.location;
+    const lastPerspective = localStorage.getItem(LAST_PERSPECTIVE_LOCAL_STORAGE_KEY);
 
     let activeNamespace = getNamespace(pathname);
     if (!activeNamespace) {
@@ -21,14 +22,15 @@ export default (state, action) => {
     }
 
     let activePerspective = getPerspective(pathname);
-    if (!activePerspective) {
-      activePerspective = localStorage.getItem(LAST_PERSPECTIVE_LOCAL_STORAGE_KEY);
+    if (pathname === '/' && lastPerspective !== activePerspective) {
+      activePerspective = lastPerspective;
     }
 
     return ImmutableMap({
       activeNavSectionId: 'workloads',
       location: pathname,
       activeNamespace: activeNamespace || 'default',
+      activeApplication: ALL_APPLICATIONS_KEY,
       activePerspective: activePerspective || defaultPerspective,
       createProjectMessage: '',
       overview: new ImmutableMap({
@@ -50,7 +52,11 @@ export default (state, action) => {
         console.warn('setActiveNamespace: Not setting to falsy!');
         return state;
       }
+      state = state.set('activeApplication', ALL_APPLICATIONS_KEY);
       return state.set('activeNamespace', action.value);
+
+    case types.setActiveApplication:
+      return state.set('activeApplication', action.value);
 
     case types.setActivePerspective:
       return state.set('activePerspective', action.value);

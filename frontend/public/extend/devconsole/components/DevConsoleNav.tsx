@@ -2,60 +2,74 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { Nav, NavList, PageSidebar } from '@patternfly/react-core';
-import { HrefLink, NavSection } from '../../../components/nav';
+import {
+  HrefLink,
+  NavSection,
+  ResourceClusterLink,
+  ResourceNSLink,
+  stripNS,
+} from '../../../components/nav';
+import { FLAGS, connectToFlags } from '../../../features';
+import { BuildModel, PipelineModel } from '../../../models';
+import { stripPerspectivePath } from '../../../components/utils/link';
 
 interface DevConsoleNavigationProps {
   isNavOpen: boolean;
   location: string;
+  flags: { [key: string]: boolean };
+  activeNamespace: string;
   onNavSelect: () => void;
   onToggle: () => void;
 }
 
 const DevNavSection = NavSection as React.ComponentClass<any>;
 
-export const PageNav = (props: DevConsoleNavigationProps) => {
-  const isActive = (path: string) => {
-    return props.location.endsWith(path);
+export const PageNav = ({
+  location,
+  activeNamespace,
+  onNavSelect,
+  onToggle,
+  flags,
+}: DevConsoleNavigationProps) => {
+  const resourcePath = location ? stripNS(stripPerspectivePath(location)) : '';
+  const isActive = (paths: string[]) => {
+    return paths.some((path) => HrefLink.isActive({ href: path }, resourcePath));
+  };
+  const isResourceActive = (paths: string[]) => {
+    return paths.some((path) =>
+      ResourceNSLink.isActive({ resource: path }, resourcePath, activeNamespace),
+    );
   };
 
   return (
-    <Nav aria-label="Nav" onSelect={props.onNavSelect} onToggle={props.onToggle}>
+    <Nav aria-label="Nav" onSelect={onNavSelect} onToggle={onToggle}>
       <NavList>
         <HrefLink
-          href="/dev"
-          name="Home"
-          activePath="/dev"
-          isActive={isActive('/dev')}
+          href="/add"
+          name="+Add"
+          isActive={isActive(['add', 'import', 'catalog', 'import', 'deploy-image'])}
         />
-        <HrefLink
-          href="/dev/codebases"
-          name="Codebases"
-          activePath="/dev/codebases"
-          isActive={isActive('/codebases')}
+        <HrefLink href="/topology" name="Topology" isActive={isActive(['topology'])} />
+        <ResourceNSLink
+          resource="buildconfigs"
+          name={BuildModel.labelPlural}
+          activeNamespace={activeNamespace}
+          isActive={isResourceActive(['buildconfigs'])}
         />
-        <HrefLink
-          href="/dev/import"
-          name="Import"
-          activePath="/dev/import"
-          isActive={isActive('/import')}
-        />
-        <HrefLink
-          href="/dev/topology"
-          name="Topology"
-          activePath="/dev/topology"
-          isActive={isActive('/topology')}
-        />
-        <DevNavSection title="Menu Item">
-          <HrefLink
-            href="/dev/submenu_1"
-            name="Sub Menu 1"
-            activePath="/dev/submenu_1/"
+        {flags[FLAGS.SHOW_PIPELINE] && (
+          <ResourceNSLink
+            resource="pipelines"
+            name={PipelineModel.labelPlural}
+            activeNamespace={activeNamespace}
+            isActive={isResourceActive(['pipelines', 'pipelineruns'])}
           />
-          <HrefLink
-            href="/dev/submenu_2"
-            name="Sub Menu 2"
-            activePath="/dev/submenu_2/"
-          />
+        )}
+        <DevNavSection title="Advanced">
+          <ResourceClusterLink resource="projects" name="Projects" required={FLAGS.OPENSHIFT} />
+          <HrefLink href="/overview" name="Status" required={FLAGS.OPENSHIFT} />
+          <HrefLink href="/status" name="Status" disallowed={FLAGS.OPENSHIFT} />
+          <ResourceNSLink resource="events" name="Events" />
+          <HrefLink href="/search" name="Search" />
         </DevNavSection>
       </NavList>
     </Nav>
@@ -71,7 +85,8 @@ export const DevConsoleNavigation: React.FunctionComponent<DevConsoleNavigationP
 const mapStateToProps = (state) => {
   return {
     location: state.UI.get('location'),
+    activeNamespace: state.UI.get('activeNamespace'),
   };
 };
 
-export default connect(mapStateToProps)(DevConsoleNavigation);
+export default connect(mapStateToProps)(connectToFlags(FLAGS.SHOW_PIPELINE)(DevConsoleNavigation));
