@@ -15,9 +15,6 @@ import (
 var settings = cli.New()
 
 func GetActionConfigurations(host, ns, token string) *action.Configuration {
-	//config, _ := clientcmd.BuildConfigFromFlags("", "/Users/akash/kubeconfig")
-	//config, _ := rest.InClusterConfig()
-	// creates the clientset
 	conf := &rest.Config{
 		Host:        host,
 		BearerToken: token,
@@ -26,7 +23,7 @@ func GetActionConfigurations(host, ns, token string) *action.Configuration {
 	tr := true
 	kubeConf := &genericclioptions.ConfigFlags{
 		APIServer:   &host,
-		Insecure:   &tr ,
+		Insecure:    &tr,
 		BearerToken: &token,
 	}
 	store := createStorage(ns, clientset)

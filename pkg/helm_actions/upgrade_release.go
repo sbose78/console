@@ -10,7 +10,7 @@ func UpgradeRelease(ns, name, url string, conf *action.Configuration) (interface
 	cmd := action.NewInstall(conf)
 	cmd.Namespace = ns
 
-	name,chart,err :=  cmd.NameAndChart([]string{name, url})
+	name, chart, err := cmd.NameAndChart([]string{name, url})
 	if err != nil {
 		return nil, err
 	}

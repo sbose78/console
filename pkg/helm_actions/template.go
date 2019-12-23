@@ -23,7 +23,7 @@ func RenderManifests(name string, url string, conf *action.Configuration) (inter
 	client.Replace = true // Skip the name check
 	client.ClientOnly = !validate
 
-	name,chart,err :=  client.NameAndChart([]string{name, url})
+	name, chart, err := client.NameAndChart([]string{name, url})
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func RenderManifests(name string, url string, conf *action.Configuration) (inter
 				}
 			}
 			if missing {
-				return nil,  fmt.Errorf("could not find template %s in chart", f)
+				return nil, fmt.Errorf("could not find template %s in chart", f)
 			}
 			for _, m := range manifestsToRender {
 				response[f] = m

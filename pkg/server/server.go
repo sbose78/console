@@ -423,7 +423,7 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 	resp.Body.Close()
 }
 
-func (s *Server) handleHelmRenderManifests(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+func (s *Server) handleHelmRenderManifests(user *auth.User, w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "openshift-helm", user.Token)
 	resp, err := helm_actions.RenderManifests(params.Get("name"), params.Get("url"), conf)
@@ -434,10 +434,10 @@ func (s *Server) handleHelmRenderManifests(user *auth.User, w http.ResponseWrite
 	w.Write([]byte(resp.(string)))
 }
 
-func (s *Server) handleHelmInstall(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+func (s *Server) handleHelmInstall(user *auth.User, w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "openshift-helm", user.Token)
-	resp, err := helm_actions.InstallChart(params.Get("ns"),params.Get("name"), params.Get("url"), conf)
+	resp, err := helm_actions.InstallChart(params.Get("ns"), params.Get("name"), params.Get("url"), conf)
 	if err != nil {
 		sendResponse(w, http.StatusBadGateway, apiError{fmt.Sprintf("Failed to install helm chart: %v", err)})
 	}
@@ -446,7 +446,7 @@ func (s *Server) handleHelmInstall(user *auth.User, w http.ResponseWriter, r *ht
 	w.Write(res)
 }
 
-func (s *Server) handleHelmList(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+func (s *Server) handleHelmList(user *auth.User, w http.ResponseWriter, r *http.Request) {
 	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "", user.Token)
 	resp, err := helm_actions.ListReleases(conf)
 	if err != nil {
