@@ -417,3 +417,8 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 	io.Copy(w, resp.Body)
 	resp.Body.Close()
 }
+
+func (s *Server) handleHelmRenderManifests(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+	token := user.Token
+
+}
