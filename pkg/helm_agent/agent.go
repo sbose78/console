@@ -6,34 +6,39 @@ import (
 	"helm.sh/helm/v3/pkg/kube"
 	"helm.sh/helm/v3/pkg/storage"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-	"os"
 )
 
 var settings = cli.New()
 
-func GetActionConfigurations(ns, token string) *action.Configuration {
-	config, _ := clientcmd.BuildConfigFromFlags("", "/Users/akash/kubeconfig")
+func GetActionConfigurations(host, ns, token string) *action.Configuration {
+	//config, _ := clientcmd.BuildConfigFromFlags("", "/Users/akash/kubeconfig")
 	//config, _ := rest.InClusterConfig()
 	// creates the clientset
-	clientset, _ := kubernetes.NewForConfig(rest.Config{
-		Host:        os.Getenv(""),
+	conf := &rest.Config{
+		Host:        host,
 		BearerToken: token,
-	})
-	config := kube.GetConfig(settings.KubeConfig, settings.KubeContext, ns)
-	store := createStorage("", clientset)
-	conf := &action.Configuration{
-		RESTClientGetter: config,
+	}
+	clientset, _ := kubernetes.NewForConfig(conf)
+	tr := true
+	kubeConf := &genericclioptions.ConfigFlags{
+		APIServer:   &host,
+		Insecure:   &tr ,
+		BearerToken: &token,
+	}
+	store := createStorage(ns, clientset)
+	config := &action.Configuration{
+		RESTClientGetter: kubeConf,
 		Releases:         store,
-		KubeClient:       kube.New(nil),
+		KubeClient:       kube.New(kubeConf),
 		RegistryClient:   nil,
 		Capabilities:     nil,
 		Log:              klog.Infof,
 	}
-	return conf
+	return config
 }
 
 func createStorage(namespace string, clientset *kubernetes.Clientset) *storage.Storage {

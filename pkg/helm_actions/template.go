@@ -3,7 +3,6 @@ package helm_actions
 import (
 	"bytes"
 	"fmt"
-	"github.com/openshift/console/pkg/helm_agent"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
@@ -13,11 +12,11 @@ import (
 	"strings"
 )
 
-func RenderManifests(name string, url string) (interface{}, error) {
+func RenderManifests(name string, url string, conf *action.Configuration) (interface{}, error) {
 	var showFiles []string
 	response := make(map[string]string)
 	validate := false
-	client := action.NewInstall(helm_agent.GetActionConfigurations())
+	client := action.NewInstall(conf)
 	client.DryRun = true
 	includeCrds := true
 	client.ReleaseName = "RELEASE-NAME"

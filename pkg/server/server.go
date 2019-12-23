@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/openshift/console/pkg/helm_actions"
+	"github.com/openshift/console/pkg/helm_agent"
 	"html/template"
 	"io"
 	"net/http"
@@ -293,6 +295,9 @@ func (s *Server) HTTPHandler() http.Handler {
 	}
 
 	handle("/api/console/version", authHandler(s.versionHandler))
+	handle("/api/console/helm/template", authHandlerWithUser(s.handleHelmRenderManifests))
+	handle("/api/console/helm/install", authHandlerWithUser(s.handleHelmInstall))
+	handle("/api/console/helm/list", authHandlerWithUser(s.handleHelmList))
 	mux.HandleFunc(s.BaseURL.Path, s.indexHandler)
 
 	return securityHeadersMiddleware(http.Handler(mux))
@@ -419,6 +424,35 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 }
 
 func (s *Server) handleHelmRenderManifests(user *auth.User, w http.ResponseWriter, r *http.Request)  {
-	token := user.Token
+	params := r.URL.Query()
+	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "openshift-helm", user.Token)
+	resp, err := helm_actions.RenderManifests(params.Get("name"), params.Get("url"), conf)
+	if err != nil {
+		sendResponse(w, http.StatusBadGateway, apiError{fmt.Sprintf("Failed to render manifests: %v", err)})
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(resp.(string)))
+}
 
+func (s *Server) handleHelmInstall(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+	params := r.URL.Query()
+	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "openshift-helm", user.Token)
+	resp, err := helm_actions.InstallChart(params.Get("ns"),params.Get("name"), params.Get("url"), conf)
+	if err != nil {
+		sendResponse(w, http.StatusBadGateway, apiError{fmt.Sprintf("Failed to install helm chart: %v", err)})
+	}
+	w.WriteHeader(http.StatusOK)
+	res, _ := json.Marshal(resp)
+	w.Write(res)
+}
+
+func (s *Server) handleHelmList(user *auth.User, w http.ResponseWriter, r *http.Request)  {
+	conf := helm_agent.GetActionConfigurations(s.KubeAPIServerURL, "", user.Token)
+	resp, err := helm_actions.ListReleases(conf)
+	if err != nil {
+		sendResponse(w, http.StatusBadGateway, apiError{fmt.Sprintf("Failed to list helm releases: %v", err)})
+	}
+	w.WriteHeader(http.StatusOK)
+	res, _ := json.Marshal(resp)
+	w.Write(res)
 }

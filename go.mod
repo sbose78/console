@@ -13,6 +13,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 	helm.sh/helm/v3 v3.0.1
+	k8s.io/cli-runtime v0.0.0-20191016114015-74ad18325ed5
 	k8s.io/client-go v0.0.0-20191016111102-bec269661e48
 	k8s.io/klog v1.0.0
 )

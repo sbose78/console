@@ -1,12 +1,11 @@
 package helm_actions
 
 import (
-	"github.com/openshift/console/pkg/helm_agent"
 	"helm.sh/helm/v3/pkg/action"
 )
 
-func ListReleases() (interface{}, error) {
-	cmd := action.NewList(helm_agent.GetActionConfigurations())
+func ListReleases(conf *action.Configuration) (interface{}, error) {
+	cmd := action.NewList(conf)
 	cmd.AllNamespaces = true
 	cmd.All = true
 
